@@ -21,8 +21,12 @@ switch($action){
 			$id = $visiteur['id'];
 			$nom =  $visiteur['nom'];
 			$prenom = $visiteur['prenom'];
-			connecter($id,$nom,$prenom);
-			include("vues/v_sommaire.php");
+                        $type = $visiteur['type'];
+			connecter($id,$nom,$prenom, $type);
+                        if($type == "V")
+                            include("vues/v_sommaireV.php");
+                        else
+                            include("vues/v_sommaireC.php");
 		}
 		break;
 	}
