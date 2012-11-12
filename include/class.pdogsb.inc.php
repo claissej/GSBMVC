@@ -67,7 +67,10 @@ class PdoGsb{
 		$rs = PdoGsb::$monPdo->query($req);
 		$ligne = $rs->fetch();
                 $ligne['type'] = $type;
-		return $ligne;
+                if(isset($ligne['id']))
+                    return $ligne;
+                else
+                    return null;
         }
 
 /**

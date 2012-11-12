@@ -30,7 +30,10 @@ function connecter($id,$nom,$prenom, $type){
  * Détruit la session active
  */
 function deconnecter(){
-	session_destroy();
+        foreach ($_SESSION as $key => $value) {
+                unset($_SESSION[$key]);
+        }
+        session_destroy();
 }
 /**
  * Transforme une date au format français jj/mm/aaaa vers le format anglais aaaa-mm-jj
