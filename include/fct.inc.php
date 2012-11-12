@@ -203,4 +203,45 @@ function nbErreurs(){
 	   return count($_REQUEST['erreurs']);
 	}
 }
+
+  function filtrerChainePourBD($str) {
+    if ( ! get_magic_quotes_gpc() ) { 
+        // si la directive de configuration magic_quotes_gpc est activée dans php.ini,
+        // toute chaîne reçue par get, post ou cookie est déjà échappée 
+        // par conséquent, il ne faut pas échapper la chaîne une seconde fois                              
+        $str = mysql_real_escape_string($str);
+    }
+    return $str;
+}  
+
+function lireDonneePost($nomDonnee, $valDefaut="") {
+    if ( isset($_POST[$nomDonnee]) ) {
+        $val = $_POST[$nomDonnee];
+    }
+    else {
+        $val = $valDefaut;
+    }
+    return $val;
+}
+
+function obtenirReqEltsHorsForfaitFicheFrais($unMois, $unIdVisiteur) {
+    $unMois = filtrerChainePourBD($unMois);
+    $requete = "select id, date, libelle, montant from LigneFraisHorsForfait
+              where idVisiteur='" . $unIdVisiteur 
+              . "' and mois='" . $unMois . "'";
+    return $requete;
+}
+function obtenirLibelleMois($unNoMois) {
+    $tabLibelles = array(1=>"Janvier", 
+                            "Février", "Mars", "Avril", "Mai", "Juin", "Juillet",
+                            "Août", "Septembre", "Octobre", "Novembre", "Décembre");
+    $libelle="";
+    if ( $unNoMois >=1 && $unNoMois <= 12 ) {
+        $libelle = $tabLibelles[$unNoMois];
+    }
+    return $libelle;
+}
+function filtrerChainePourNavig($str) {
+    return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
+}
 ?>

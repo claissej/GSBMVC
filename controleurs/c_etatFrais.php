@@ -1,5 +1,5 @@
 ﻿<?php
-include("vues/v_sommaire.php");
+include("vues/v_sommaireV.php");
 $action = $_REQUEST['action'];
 $idVisiteur = $_SESSION['idVisiteur'];
 switch($action){

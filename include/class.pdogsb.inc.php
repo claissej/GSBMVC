@@ -309,5 +309,86 @@ class PdoGsb{
 		where fichefrais.idvisiteur ='$idVisiteur' and fichefrais.mois = '$mois'";
 		PdoGsb::$monPdo->exec($req);
 	}
+
+
+function visiteurFicheEnCours() {
+	$requete = "Select DISTINCT(id),nom,prenom from visiteur Inner join fichefrais on fichefrais.idVisiteur = visiteur.id Where fichefrais.idEtat='CR'";
+	return PdoGsb::$monPdo->query($requete);
+}
+
+function moisFicheEnCours() {
+	$requete = " Select DISTINCT(mois) from fichefrais Where fichefrais.idEtat='CR'";
+	return PdoGsb::$monPdo->query($requete);
+}
+function gg(){
+$req1="Select nom from visiteur Inner join fichefrais on fichefrais.idVisiteur = visiteur.id where id='".$_POST['Id']."' and mois='".$_POST['mois']."'";
+return PdoGsb::$monPdo->query($req1);
+}
+
+function obtenirDetailFicheFrais($unMois, $unIdVisiteur) {
+    $unMois = filtrerChainePourBD($unMois);
+    $ligne = false;
+    $requete="select IFNULL(nbJustificatifs,0) as nbJustificatifs, Etat.id as idEtat, libelle as libelleEtat, dateModif, montantValide 
+    from FicheFrais inner join Etat on idEtat = Etat.id 
+    where idVisiteur='" . $unIdVisiteur . "' and mois='" . $unMois . "'";
+    $idJeuRes = PdoGsb::$monPdo->query($requete);  
+    if ( $idJeuRes ) {
+        $ligne = $idJeuRes->fetch();
+    }        
+
+    return $ligne ;
+}
+function existeFicheFrais( $unMois, $unIdVisiteur) {
+    $unMois = filtrerChainePourBD($unMois);
+    $requete = "select idVisiteur from FicheFrais where idVisiteur='" . $unIdVisiteur . 
+              "' and mois='" . $unMois . "'";
+    $idJeuRes = PdoGsb::$monPdo->query($requete);  
+    $ligne = false ;
+    if ( $idJeuRes ) {
+        $ligne = $idJeuRes->fetch();
+        
+    }      
+}
+function obtenirTableauFicheFrais($user)
+{
+     $requete="select idFraisForfait ,quantite from lignefraisforfait WHERE idVisiteur = \"".$user."\";";
+     return PdoGsb::$monPdo->query($requete);
+}
+function obtenirTableauMontantFrais()
+{
+     $requete = "select id ,montant from fraisforfait";
+     $query = PdoGsb::$monPdo->query($requete) ;
+     $retour = Array();
+     while($data = $query->fetch())
+     {
+         $retour[$data['id']] = $data['montant'];
+     }
+     return $retour;
+}
+
+function obtenirReqMoisFrais() {
+    $req = "select distinct(fichefrais.mois) as mois from  fichefrais where idEtat='VA'";
+    return $req ;
+}
+function obtenirReqFraisVisiteur()
+{   
+    $reqvisiteur = "select distinct (idVisiteur) from fichefrais where idEtat='VA'";
+    return $reqvisiteur;
+} 
+function obtenirReqNbFicheFrais($unMois, $unIdVisiteur) {
+    
+    $unMois = filtrerChainePourBD($unMois);
+    $requete = "SELECT fraisforfait.libelle, sum(quantite) as quantite
+    FROM lignefraisforfait INNER JOIN fichefrais 
+    ON lignefraisforfait.idVisiteur = fichefrais.idVisiteur
+    INNER JOIN fraisforfait
+    ON fraisforfait.id = lignefraisforfait.idFraisForfait
+    WHERE fichefrais.idEtat = \"VA\" 
+    and fichefrais.idVisiteur=\"".$unIdVisiteur."\" 
+    and fichefrais.mois=\"".$unMois."\" 
+    group by idFraisForfait";
+    return $requete;
+}
+
 }
 ?>

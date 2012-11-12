@@ -1,16 +1,6 @@
 
 <?php
-$repInclude = './include/';
-  require($repInclude . "_init.inc.php");
-
-  // page inaccessible si visiteur non connecté
-  if ( ! estVisiteurConnecte() ) 
-      {
-      header("Location: cSeConnecter.php");  
-      }
-      
-      require($repInclude . "_entete.inc.html");  
-      require($repInclude . "_sommaire.inc.php");
+include("vues/v_sommaireC.php");
   
   
   // acquisition des données entrées, ici le numéro de mois et l'étape du traitement
@@ -31,7 +21,7 @@ $repInclude = './include/';
       { // l'utilisateur valide ses nouvelles données
                 
       // vérification de l'existence de la fiche de frais pour le mois demandé
-      $existeFicheFrais = existeFicheFrais($idConnexion, $moisSaisi, $userSaisi);
+      $existeFicheFrais = existeFicheFrais($moisSaisi, $userSaisi);
       // si elle n'existe pas, on la crée avec les élements frais forfaitisés à 0
           if ( !$existeFicheFrais ) 
           {
@@ -40,14 +30,14 @@ $repInclude = './include/';
           else 
               {
               // récupération des données sur la fiche de frais demandée
-              $tabFicheFrais = obtenirDetailFicheFrais($idConnexion, $moisSaisi, $userSaisi);
+              $tabFicheFrais = obtenirDetailFicheFrais($moisSaisi, $userSaisi);
               $tabFirst = obtenirTableauFicheFrais($userSaisi);
               $tabSecond = obtenirTableauMontantFrais();
               
               $montantTotal = 0;
               $requete = obtenirReqEltsHorsForfaitFicheFrais($moisSaisi, $userSaisi);
               $idJeuEltsHorsForfait = mysql_query($requete, $idConnexion);
-              while($data = mysql_fetch_array($idJeuEltsHorsForfait))
+              while($data = $idJeuEltsHorsForfait->fetch())
                 {
                     $montantTotal += $data['montant'];
                 }
@@ -70,8 +60,8 @@ $repInclude = './include/';
             <?php
                 // on propose tous les mois pour lesquels le visiteur a une fiche de frais
                 $req = obtenirReqMoisFrais();
-                $idJeuMois = mysql_query($req, $idConnexion);
-                $lgMois = mysql_fetch_assoc($idJeuMois);
+                $idJeuMois = PdoGsb::$monPdo->query($req, $idConnexion);
+                $lgMois = $idJeuMois->fetch();
                 while ( is_array($lgMois) ) 
                     {
                     $mois = $lgMois["mois"];
@@ -80,9 +70,9 @@ $repInclude = './include/';
                     ?>    
                     <option value="<?php echo $mois; ?>"<?php if ($moisSaisi == $mois) { ?> selected="selected"<?php } ?>><?php echo obtenirLibelleMois($noMois) . " " . $annee; ?></option>
                     <?php
-                    $lgMois = mysql_fetch_assoc($idJeuMois);        
+                    $lgMois = $idJeuMois->fetch();        
                     }
-                mysql_free_result($idJeuMois);
+                
             ?>
         </select>
       </p> 
@@ -95,8 +85,8 @@ $repInclude = './include/';
             <?php
             // on propose tous les visiteurs pour lesquels le visiteur a une fiche de frais
             $req1 = obtenirReqFraisVisiteur();               
-            $idJeuVisiteur = mysql_query($req1,$idConnexion);   
-            while($genre = mysql_fetch_row($idJeuVisiteur))
+            $idJeuVisiteur = PdoGsb::$monPdo->query($req1,$idConnexion);   
+            while($genre = $idJeuVisiteur->fetch())
                  {
                  ?>
                  <option value=<?php echo "$genre[0]"?>><?php echo "$genre[0]" ?></option>
@@ -135,7 +125,7 @@ $repInclude = './include/';
     depuis le <em><?php echo $tabFicheFrais["dateModif"]; ?></em></h3>
     <div class="encadre">
     <?php
-    while($data = mysql_fetch_array($tabFirst))
+    while($data = PdoGsb::$monPdo->query($tabFirst))
     {
         foreach($tabSecond as $cle => $valeur)
         {
@@ -156,14 +146,14 @@ $repInclude = './include/';
             <?php          
             //affichage des elements en fonction des deux liste déroulante
             $req = obtenirReqNbFicheFrais($moisSaisi, $userSaisi);
-            $idJeuEltsFraisForfait = mysql_query($req, $idConnexion) or die(mysql_error());
+            $idJeuEltsFraisForfait = PdoGsb::$monPdo->query($req, $idConnexion) or die(mysql_error());
             echo mysql_error($idConnexion);
             $tabEltsFraisForfait = array();
-                while ( $lgEltForfait = mysql_fetch_array($idJeuEltsFraisForfait)) 
+                while ( $lgEltForfait = $idJeuEltsFraisForfait->fetch()) 
                     {
                     $tabEltsFraisForfait[$lgEltForfait["libelle"]] = $lgEltForfait["quantite"];
                     }
-                    mysql_free_result($idJeuEltsFraisForfait);
+                   
             ?>
   	<table class="listeLegere">
   	   <caption>Quantités des éléments forfaitisés</caption>
@@ -203,8 +193,8 @@ $repInclude = './include/';
             // demande de la requête pour obtenir la liste des éléments hors
             // forfait du visiteur connecté pour le mois demandé
             $requete = obtenirReqEltsHorsForfaitFicheFrais($moisSaisi, $userSaisi);
-            $idJeuEltsHorsForfait = mysql_query($requete, $idConnexion);
-            $lgEltHorsForfait = mysql_fetch_assoc($idJeuEltsHorsForfait);
+            $idJeuEltsHorsForfait = PdoGsb::$monPdo->query($requete, $idConnexion);
+            $lgEltHorsForfait = $idJeuEltsHorsForfait->fetch();
             
             // parcours des éléments hors forfait 
             while ( is_array($lgEltHorsForfait) ) {
@@ -215,9 +205,9 @@ $repInclude = './include/';
                    <td><?php echo $lgEltHorsForfait["montant"] ; ?></td>
                 </tr>
             <?php
-                $lgEltHorsForfait = mysql_fetch_assoc($idJeuEltsHorsForfait);
+                $lgEltHorsForfait = $idJeuEltsHorsForfait->fetch();
             }
-            mysql_free_result($idJeuEltsHorsForfait);
+            
   ?>
     </table>
   </div>
@@ -227,7 +217,3 @@ $repInclude = './include/';
     
 ?>    
   </div>
-<?php        
-  require($repInclude . "_pied.inc.html");
-  require($repInclude . "_fin.inc.php");
-?> 

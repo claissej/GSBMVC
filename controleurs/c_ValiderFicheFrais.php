@@ -1,31 +1,22 @@
 ﻿<?php
 
+include("vues/v_sommaireC.php");
 /** 
  * Page d'accueil de l'application web AppliFrais
  * @package default
  * @todo  RAS
  */
-  $repInclude = './include/';
-  require($repInclude . "_init.inc.php");
 
-  // page inaccessible si visiteur non connecté
-  if ( ! estVisiteurConnecte() ) 
-  {
-        header("Location: cSeConnecter.php");  
-  }
-  require($repInclude . "_entete.inc.html");
-  require($repInclude . "_sommaire.inc.php");
-  $listeVisiteur = visiteurFicheEnCours();
-  $listeMois = 	moisFicheEnCours();
+  $listeVisiteur = PdoGsb::visiteurFicheEnCours();
+  $listeMois = 	PdoGsb::moisFicheEnCours();
   $i=0;
   
   if(isset($_POST['bool']))
 	{
 		$Id=$_POST['Id'];
 		$Mois=$_POST['mois'];
-		$req1="Select nom from visiteur Inner join fichefrais on fichefrais.idVisiteur = visiteur.id where id='".$_POST['Id']."' and mois='".$_POST['mois']."'";
-		$res=mysql_query($req1);
-		if(mysql_num_rows($res)!=0)
+		$res=PdoGsb::gg();
+		if(($res->rowCount())!=0)
 		{
 			$VisiteurMoisValide="Vrai";
 			
@@ -52,7 +43,7 @@
 		<select name="Id">
 		
 		<?php
-			while($visiteur = mysql_fetch_array($listeVisiteur))
+			while($visiteur = $listeVisiteur->fetch())
 			{
 				echo"
 				<option label='Visiteur' value='".$visiteur['id']."'>".$visiteur['nom']." ".$visiteur['prenom']."</option>
@@ -61,7 +52,7 @@
 			}
 			echo"</select><br> Mois : <select name='mois'>";
 			
-			while($mois=mysql_fetch_array($listeMois))
+			while($mois= $listeMois->fetch())
 			{
 				echo"
 				<option label='MoisVisiteurs' value='".$mois['mois']."'>".substr($mois['mois'],4,5)."/".substr($mois['mois'],0,4)."</option>
@@ -83,7 +74,7 @@
 					}
 					elseif($VisiteurMoisValide=="Vrai")
 					{	
-						$res=obtenirDetailFicheFrais($idConnexion, $Mois, $Id);
+						$res=  PdoGsb::obtenirDetailFicheFrais($Mois, $Id);
 						echo"<table cellpadding='5'>";
 						echo"<tr><td >Justificatifs : </td><td> ".$res['nbJustificatifs']."</td></tr>";
 						echo"<tr><td >Etat : </td><td> ".$res['libelleEtat']."</td></tr>";
@@ -101,6 +92,5 @@
 		</fieldset>
     </div>
 <?php        
-  require($repInclude . "_pied.inc.html");
-  require($repInclude . "_fin.inc.php");
+  
 ?>
