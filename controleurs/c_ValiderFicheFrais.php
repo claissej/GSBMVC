@@ -1,11 +1,6 @@
 ﻿<?php
 
 include("vues/v_sommaireC.php");
-/** 
- * Page d'accueil de l'application web AppliFrais
- * @package default
- * @todo  RAS
- */
 
   $listeVisiteur = PdoGsb::visiteurFicheEnCours();
   $listeMois = 	PdoGsb::moisFicheEnCours();

@@ -20,10 +20,10 @@ switch($uc){
 		include("controleurs/c_etatFrais.php");break; 
 	}
         case 'SuiviFicheFrais':{
-                include("controleurs/c_SuiviFicheFrais.php");
+                include("controleurs/c_SuiviFicheFrais.php");break; 
         }
         case 'ValiderFicheFrais':{
-                include("controleurs/c_ValiderFicheFrais.php");
+                include("controleurs/c_ValiderFicheFrais.php");break; 
         }
 }
 include("vues/v_pied.php") ;

@@ -343,16 +343,23 @@ function existeFicheFrais( $unMois, $unIdVisiteur) {
     $requete = "select idVisiteur from FicheFrais where idVisiteur='" . $unIdVisiteur . 
               "' and mois='" . $unMois . "'";
     $idJeuRes = PdoGsb::$monPdo->query($requete);  
-    $ligne = false ;
-    if ( $idJeuRes ) {
-        $ligne = $idJeuRes->fetch();
-        
-    }      
+    if($idJeuRes->rowCount() == 1)
+        return true;
+    else
+        return false;
 }
-function obtenirTableauFicheFrais($user)
+function obtenirTableauFicheFrais($user, $mois)
 {
-     $requete="select idFraisForfait ,quantite from lignefraisforfait WHERE idVisiteur = \"".$user."\";";
-     return PdoGsb::$monPdo->query($requete);
+     $requete="select idFraisForfait ,quantite from lignefraisforfait WHERE idVisiteur = \"".$user."\" and mois='" . $mois . "'";
+     $query = PdoGsb::$monPdo->query($requete) ;
+     $retour = Array();
+     $i = 0;
+     while($data = $query->fetch())
+     {
+         $retour[$i] = $data;
+         $i++;
+     }
+     return $retour;
 }
 function obtenirTableauMontantFrais()
 {
@@ -390,5 +397,80 @@ function obtenirReqNbFicheFrais($unMois, $unIdVisiteur) {
     return $requete;
 }
 
+public function obtenirMoisFrais()
+{
+     $requete = "select distinct(fichefrais.mois) as mois from  fichefrais where idEtat='VA'";
+     $query = PdoGsb::$monPdo->query($requete);
+     $retour = Array();
+     $i = 0;
+     while($data = $query->fetch())
+     {
+         $retour[$i] = $data['mois'];
+         $i++;
+     }
+     return $retour;
+}
+public function obtenirFraisVisiteur()
+{
+     $requete = "select distinct (idVisiteur) as visiteur from fichefrais where idEtat='VA'";
+     $query = PdoGsb::$monPdo->query($requete);
+     $retour = Array();
+     $i = 0;
+     while($data = $query->fetch())
+     {
+         $retour[$i] = $data['visiteur'];
+         $i++;
+     }
+     return $retour;
+}
+
+public function obtenirMontantTotal($userSaisi, $moisSaisi)
+{   
+     
+     $requete = "select SUM(quantite*montant) AS total
+                    from lignefraisforfait INNER JOIN fraisforfait
+                    ON lignefraisforfait.idFraisForfait = fraisforfait.id
+                    WHERE idVisiteur = '".$userSaisi."' and mois= '".$moisSaisi."'";
+     $query = PdoGsb::$monPdo->query($requete);
+     $data = $query->fetch();
+     return $data['total'];
+}
+
+public function obtenirTabEltsFraisForfait($userSaisi, $moisSaisi)
+{   
+    $requete = "SELECT fraisforfait.libelle, sum(quantite) as quantite
+                FROM lignefraisforfait INNER JOIN fichefrais 
+                ON lignefraisforfait.idVisiteur = fichefrais.idVisiteur
+                INNER JOIN fraisforfait
+                ON fraisforfait.id = lignefraisforfait.idFraisForfait
+                WHERE fichefrais.idEtat = \"VA\" 
+                and fichefrais.idVisiteur=\"".$userSaisi."\" 
+                and fichefrais.mois=\"".$moisSaisi."\" 
+                group by idFraisForfait";
+    $idJeuEltsFraisForfait = PdoGsb::$monPdo->query($requete);
+    $tabEltsFraisForfait = array();
+    while ( $lgEltForfait = $idJeuEltsFraisForfait->fetch()) 
+    {
+        $tabEltsFraisForfait[$lgEltForfait["libelle"]] = $lgEltForfait["quantite"];
+    }
+    return $tabEltsFraisForfait;
+}
+
+public function obtenirLgEltHorsForfait($userSaisi, $moisSaisi)
+{
+    $requete = "select id, date, libelle, montant from LigneFraisHorsForfait
+              where idVisiteur='" . $userSaisi 
+              . "' and mois='" . $moisSaisi . "'";
+    $query = PdoGsb::$monPdo->query($requete);
+    
+     $retour = Array();
+     $i = 0;
+     while($data = $query->fetch())
+     {
+         $retour[$i] = $data;
+         $i++;
+     }
+     return $retour;
+}
 }
 ?>

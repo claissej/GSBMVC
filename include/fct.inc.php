@@ -244,4 +244,15 @@ function obtenirLibelleMois($unNoMois) {
 function filtrerChainePourNavig($str) {
     return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
 }
+function toStringErreurs() {
+    $tabErr = $_REQUEST['erreurs'];
+    $str = '<div class="erreur">';
+    $str .= '<ul>';
+    foreach($tabErr as $erreur){
+        $str .= '<li>' . $erreur . '</li>';
+	}
+    $str .= '</ul>';
+    $str .= '</div>';
+    return $str;
+} 
 ?>

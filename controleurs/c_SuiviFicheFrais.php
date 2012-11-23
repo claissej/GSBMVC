@@ -8,6 +8,7 @@ include("vues/v_sommaireC.php");
   $moisSaisi=lireDonneePost("lstMois", "");
   $etape=lireDonneePost("etape",""); 
   $userSaisi=lireDonneePost("lstVisiteur","");
+  $tabErreurs = array();
   
   $_SESSION['mois']=$moisSaisi;
   $_SESSION['user']=$userSaisi;
@@ -19,29 +20,18 @@ include("vues/v_sommaireC.php");
       } 
   if ($etape == "validerConsult") 
       { // l'utilisateur valide ses nouvelles données
-                
       // vérification de l'existence de la fiche de frais pour le mois demandé
-      $existeFicheFrais = existeFicheFrais($moisSaisi, $userSaisi);
+      $existeFicheFrais = $pdo->existeFicheFrais($moisSaisi, $userSaisi);
       // si elle n'existe pas, on la crée avec les élements frais forfaitisés à 0
           if ( !$existeFicheFrais ) 
           {
-              ajouterErreur($tabErreurs, "Le mois demandé est invalide");
+              ajouterErreur("Le mois demandé est invalide");
           }
           else 
               {
               // récupération des données sur la fiche de frais demandée
-              $tabFicheFrais = obtenirDetailFicheFrais($moisSaisi, $userSaisi);
-              $tabFirst = obtenirTableauFicheFrais($userSaisi);
-              $tabSecond = obtenirTableauMontantFrais();
-              
-              $montantTotal = 0;
-              $requete = obtenirReqEltsHorsForfaitFicheFrais($moisSaisi, $userSaisi);
-              $idJeuEltsHorsForfait = mysql_query($requete, $idConnexion);
-              while($data = $idJeuEltsHorsForfait->fetch())
-                {
-                    $montantTotal += $data['montant'];
-                }
-             
+              $tabFicheFrais = $pdo->obtenirDetailFicheFrais($moisSaisi, $userSaisi);
+              $montantTotal = $pdo->obtenirMontantTotal($userSaisi, $moisSaisi);
               }      
       }   
       ?>
@@ -59,20 +49,14 @@ include("vues/v_sommaireC.php");
         <select id="lstMois" name="lstMois" title="Sélectionnez le mois souhaité pour la fiche de frais">
             <?php
                 // on propose tous les mois pour lesquels le visiteur a une fiche de frais
-                $req = obtenirReqMoisFrais();
-                $idJeuMois = PdoGsb::$monPdo->query($req, $idConnexion);
-                $lgMois = $idJeuMois->fetch();
-                while ( is_array($lgMois) ) 
-                    {
-                    $mois = $lgMois["mois"];
+                $idJeuMois = $pdo->obtenirMoisFrais();
+                foreach ($idJeuMois as $mois) {
                     $noMois = intval(substr($mois, 4, 2));
                     $annee = intval(substr($mois, 0, 4));
                     ?>    
-                    <option value="<?php echo $mois; ?>"<?php if ($moisSaisi == $mois) { ?> selected="selected"<?php } ?>><?php echo obtenirLibelleMois($noMois) . " " . $annee; ?></option>
+                    <option value="<?php echo $mois; ?>"<?php if ($moisSaisi == $mois) { ?> selected="selected"<?php } ?>><?php echo obtenirLibelleMois($noMois) . " " . $annee ?></option>
                     <?php
-                    $lgMois = $idJeuMois->fetch();        
-                    }
-                
+                }
             ?>
         </select>
       </p> 
@@ -84,14 +68,12 @@ include("vues/v_sommaireC.php");
         <select id="lstVisiteur" name="lstVisiteur" title="Sélectionnez le Visiteur souhaité pour la fiche de frais">
             <?php
             // on propose tous les visiteurs pour lesquels le visiteur a une fiche de frais
-            $req1 = obtenirReqFraisVisiteur();               
-            $idJeuVisiteur = PdoGsb::$monPdo->query($req1,$idConnexion);   
-            while($genre = $idJeuVisiteur->fetch())
-                 {
+            $idJeuVisiteur = $pdo->obtenirFraisVisiteur();
+                foreach ($idJeuVisiteur as $visiteurs) {
                  ?>
-                 <option value=<?php echo "$genre[0]"?>><?php echo "$genre[0]" ?></option>
+                 <option value=<?php echo $visiteurs; ?>><?php echo $visiteurs; ?></option>
                  <?php
-                 }                    
+                }         
                  ?>               
         </select>
         </div>
@@ -109,9 +91,9 @@ include("vues/v_sommaireC.php");
 // demande et affichage des différents éléments (forfaitisés et non forfaitisés)
 // de la fiche de frais demandée, uniquement si pas d'erreur détecté au contrôle
     if ( $etape == "validerConsult" ) {
-        if ( nbErreurs($tabErreurs) > 0 ) 
+        if ( nbErreurs() > 0 )
             {
-            echo toStringErreurs($tabErreurs) ;
+            echo toStringErreurs() ;
             }
             else {
          
@@ -124,20 +106,6 @@ include("vues/v_sommaireC.php");
     <em><?php echo $tabFicheFrais["libelleEtat"]; ?> </em>
     depuis le <em><?php echo $tabFicheFrais["dateModif"]; ?></em></h3>
     <div class="encadre">
-    <?php
-    while($data = PdoGsb::$monPdo->query($tabFirst))
-    {
-        foreach($tabSecond as $cle => $valeur)
-        {
-           if($cle == $data['idFraisForfait'])
-           {
-                $montantTotal += $data['quantite']*$valeur;
-           }
-        }
-    }
-    
-    ?>
-        
                 <p>Montant validé : <?php echo $montantTotal ;
                 $_SESSION['montantTotal'] = $montantTotal;
 
@@ -145,14 +113,7 @@ include("vues/v_sommaireC.php");
     </p>
             <?php          
             //affichage des elements en fonction des deux liste déroulante
-            $req = obtenirReqNbFicheFrais($moisSaisi, $userSaisi);
-            $idJeuEltsFraisForfait = PdoGsb::$monPdo->query($req, $idConnexion) or die(mysql_error());
-            echo mysql_error($idConnexion);
-            $tabEltsFraisForfait = array();
-                while ( $lgEltForfait = $idJeuEltsFraisForfait->fetch()) 
-                    {
-                    $tabEltsFraisForfait[$lgEltForfait["libelle"]] = $lgEltForfait["quantite"];
-                    }
+            $tabEltsFraisForfait = $pdo->obtenirTabEltsFraisForfait($userSaisi, $moisSaisi);
                    
             ?>
   	<table class="listeLegere">
@@ -192,20 +153,18 @@ include("vues/v_sommaireC.php");
 <?php          
             // demande de la requête pour obtenir la liste des éléments hors
             // forfait du visiteur connecté pour le mois demandé
-            $requete = obtenirReqEltsHorsForfaitFicheFrais($moisSaisi, $userSaisi);
-            $idJeuEltsHorsForfait = PdoGsb::$monPdo->query($requete, $idConnexion);
-            $lgEltHorsForfait = $idJeuEltsHorsForfait->fetch();
             
+            $lgEltHorsForfait = $pdo->obtenirLgEltHorsForfait($userSaisi, $moisSaisi);
             // parcours des éléments hors forfait 
-            while ( is_array($lgEltHorsForfait) ) {
+            foreach ($lgEltHorsForfait as $HorsForfait)
+            {
             ?>
                 <tr>
-                   <td><?php echo $lgEltHorsForfait["date"] ; ?></td>
-                   <td><?php echo filtrerChainePourNavig($lgEltHorsForfait["libelle"]) ; ?></td>
-                   <td><?php echo $lgEltHorsForfait["montant"] ; ?></td>
+                   <td><?php echo $HorsForfait["date"] ; ?></td>
+                   <td><?php echo filtrerChainePourNavig($HorsForfait["libelle"]) ; ?></td>
+                   <td><?php echo $HorsForfait["montant"] ; ?></td>
                 </tr>
             <?php
-                $lgEltHorsForfait = $idJeuEltsHorsForfait->fetch();
             }
             
   ?>
