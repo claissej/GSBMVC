@@ -311,6 +311,10 @@ class PdoGsb{
 	}
 
 
+function valiserFiche($user, $mois) {
+	$requete = "UPDATE FicheFrais SET idEtat = VA WHERE idVisiteur = '".$user."' AND mois = '".$mois."';";
+	return PdoGsb::$monPdo->query($requete);
+}
 function visiteurFicheEnCours() {
 	$requete = "Select DISTINCT(id),nom,prenom from visiteur Inner join fichefrais on fichefrais.idVisiteur = visiteur.id Where fichefrais.idEtat='CR'";
 	return PdoGsb::$monPdo->query($requete);
@@ -472,5 +476,6 @@ public function obtenirLgEltHorsForfait($userSaisi, $moisSaisi)
      }
      return $retour;
 }
+
 }
 ?>

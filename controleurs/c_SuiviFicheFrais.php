@@ -10,9 +10,6 @@ include("vues/v_sommaireC.php");
   $userSaisi=lireDonneePost("lstVisiteur","");
   $tabErreurs = array();
   
-  $_SESSION['mois']=$moisSaisi;
-  $_SESSION['user']=$userSaisi;
-  
   if ($etape != "demanderConsult" && $etape != "validerConsult") 
       {
       // si autre valeur, on considère que c'est le début du traitement
@@ -87,7 +84,11 @@ include("vues/v_sommaireC.php");
 </form>
       
 <?php      
-
+    if(isset($_POST['valider']))
+    {
+        $pdo->valiserFiche($_SESSION['user'], $_SESSION['mois']);
+        echo "La fiche de frais de \"".$_SESSION['user']."\" a bien été validée.<br>";
+    }
 // demande et affichage des différents éléments (forfaitisés et non forfaitisés)
 // de la fiche de frais demandée, uniquement si pas d'erreur détecté au contrôle
     if ( $etape == "validerConsult" ) {
@@ -96,18 +97,21 @@ include("vues/v_sommaireC.php");
             echo toStringErreurs() ;
             }
             else {
-         
+            $_SESSION['mois']=$moisSaisi;
+            $_SESSION['user']=$userSaisi;
 ?>
-              <center><form action="ValidationMiseAJour.php">
-              <input type=submit value="Payer cette Fiche"/>
+              <center><form method="POST" action="#">
+              <input type=submit name="valider" value="Payer cette Fiche"/>
               </form></center>
       
     <h3>Fiche de frais du mois de <?php echo obtenirLibelleMois(intval(substr($moisSaisi,4,2))) . " " . substr($moisSaisi,0,4); ?> : 
     <em><?php echo $tabFicheFrais["libelleEtat"]; ?> </em>
     depuis le <em><?php echo $tabFicheFrais["dateModif"]; ?></em></h3>
     <div class="encadre">
-                <p>Montant validé : <?php echo $montantTotal ;
+                <p>Montant validé : <?php $resMontant = $pdo->obtenirDetailFicheFrais($moisSaisi, $userSaisi);
+                $montantTotal = $resMontant['montantValide'];
                 $_SESSION['montantTotal'] = $montantTotal;
+                echo $montantTotal;
 
         ?>              
     </p>
