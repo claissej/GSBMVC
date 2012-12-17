@@ -204,6 +204,12 @@ function nbErreurs(){
 	}
 }
 
+/**
+ * Retoune une chaine de caractere avec les filtre pour la base de donnée 
+ 
+ * @param $str : chaine de caractere 
+ * @return la chaine de caractere avec les filtre pour la base de donnée 
+ */
   function filtrerChainePourBD($str) {
     if ( ! get_magic_quotes_gpc() ) { 
         // si la directive de configuration magic_quotes_gpc est activée dans php.ini,
@@ -213,7 +219,13 @@ function nbErreurs(){
     }
     return $str;
 }  
-
+/**
+ * Retoune la valeur du poste 
+ 
+ * @param $nomDonne : nom de l'index
+ * @param $valDefaut : val de retour par defaut si l'index n'existe pas (non obligatoire)
+ * @return la valeur du post en fonction de l'index
+ */
 function lireDonneePost($nomDonnee, $valDefaut="") {
     if ( isset($_POST[$nomDonnee]) ) {
         $val = $_POST[$nomDonnee];
@@ -224,6 +236,13 @@ function lireDonneePost($nomDonnee, $valDefaut="") {
     return $val;
 }
 
+/**
+ * Retoune la requete sql pour les lignes de frais en fonction d'un mois et d'un visiteur
+ 
+ * @param $unMois : le mois
+ * @param $unIdVisiteur : id du visiteur
+ * @return chaine de caractere composant la requete sql
+ */
 function obtenirReqEltsHorsForfaitFicheFrais($unMois, $unIdVisiteur) {
     $unMois = filtrerChainePourBD($unMois);
     $requete = "select id, date, libelle, montant from LigneFraisHorsForfait
@@ -231,6 +250,12 @@ function obtenirReqEltsHorsForfaitFicheFrais($unMois, $unIdVisiteur) {
               . "' and mois='" . $unMois . "'";
     return $requete;
 }
+/**
+ * Retoune le mois en lettre en fonction de son numéro (1: janvier, 2: fevrier, ...)
+ 
+ * @param $unMois : le numero du mois (1: janvier)
+ * @return chaine de caractere etant le mois en toutes lettres
+ */
 function obtenirLibelleMois($unNoMois) {
     $tabLibelles = array(1=>"Janvier", 
                             "Février", "Mars", "Avril", "Mai", "Juin", "Juillet",
@@ -241,9 +266,21 @@ function obtenirLibelleMois($unNoMois) {
     }
     return $libelle;
 }
+/**
+ * Retoune une chaine de caractere avec les caracteres spéciaux HTML
+ 
+ * @param $str : chaine de caractere destiné à être affichée
+ * @return chaine de caractere avec les caracteres spéciaux HTML
+ */
 function filtrerChainePourNavig($str) {
     return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
 }
+
+/**
+ * Retoune une chaine de caractere contenant les erreurs si elles existent
+ 
+ * @return chaine de caractere avec les erreurs
+ */
 function toStringErreurs() {
     $tabErr = $_REQUEST['erreurs'];
     $str = '<div class="erreur">';

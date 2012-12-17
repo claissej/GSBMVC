@@ -55,7 +55,7 @@ class PdoGsb{
 */
 	public function getInfosVisiteur($login, $mdp){
 		$req = "select type, login from utilisateur 
-		where login='$login' and mdp='$mdp'";
+		where login='$login' and mdp='".$this->cryptage($login,$mdp)."';";
 		$rs = PdoGsb::$monPdo->query($req);
 		$ligne = $rs->fetch();
                 $type = $ligne['type'];
@@ -311,24 +311,54 @@ class PdoGsb{
 	}
 
 
+/**
+ * valide une fiche de frais en fontion de l'utilisateur et du mois
+ 
+ * Modifie le champ idEtat et met la date de modif à aujourd'hui
+ * @param $user : id du visiteur
+ * @param $mois : numero du mois
+ * @return le resultat de la requete
+ */
 function valiserFiche($user, $mois) {
 	$requete = "UPDATE FicheFrais SET idEtat = VA WHERE idVisiteur = '".$user."' AND mois = '".$mois."';";
 	return PdoGsb::$monPdo->query($requete);
 }
+/**
+ * retourne les fiche du visiteur en cours dont l'état est "CR"
+ 
+ * @return le resultat de la requete
+ */
 function visiteurFicheEnCours() {
 	$requete = "Select DISTINCT(id),nom,prenom from visiteur Inner join fichefrais on fichefrais.idVisiteur = visiteur.id Where fichefrais.idEtat='CR'";
 	return PdoGsb::$monPdo->query($requete);
 }
 
+/**
+ * retourne les differents mois de fiche de frais dont l'état est "CR"
+ 
+ * @return le resultat de la requete
+ */
 function moisFicheEnCours() {
 	$requete = " Select DISTINCT(mois) from fichefrais Where fichefrais.idEtat='CR'";
 	return PdoGsb::$monPdo->query($requete);
 }
+/**
+ * retourne le nom du visiteur en fonction de son id
+ 
+ * @return le resultat de la requete
+ */
 function gg(){
 $req1="Select nom from visiteur Inner join fichefrais on fichefrais.idVisiteur = visiteur.id where id='".$_POST['Id']."' and mois='".$_POST['mois']."'";
 return PdoGsb::$monPdo->query($req1);
 }
 
+/**
+ * retourne la fihe de frais d'un visiteur
+ 
+ * @param $unMois : id du visiteur
+ * @param $unIdVisiteur : numero du mois
+ * @return le resultat de la requete
+ */
 function obtenirDetailFicheFrais($unMois, $unIdVisiteur) {
     $unMois = filtrerChainePourBD($unMois);
     $ligne = false;
@@ -342,6 +372,13 @@ function obtenirDetailFicheFrais($unMois, $unIdVisiteur) {
 
     return $ligne ;
 }
+/**
+ * verifie l'existance d'une fiche de frais
+ 
+ * @param $unMois : id du visiteur
+ * @param $unIdVisiteur : numero du mois
+ * @return un boolean (true si la fiche existe, sinon false)
+ */
 function existeFicheFrais( $unMois, $unIdVisiteur) {
     $unMois = filtrerChainePourBD($unMois);
     $requete = "select idVisiteur from FicheFrais where idVisiteur='" . $unIdVisiteur . 
@@ -352,6 +389,13 @@ function existeFicheFrais( $unMois, $unIdVisiteur) {
     else
         return false;
 }
+/**
+ * retourne la fiche de frais d'un visiteur son la forme d'un tableau
+ 
+ * @param $mois : id du visiteur
+ * @param $user : numero du mois
+ * @return le resultat de la requete
+ */
 function obtenirTableauFicheFrais($user, $mois)
 {
      $requete="select idFraisForfait ,quantite from lignefraisforfait WHERE idVisiteur = \"".$user."\" and mois='" . $mois . "'";
@@ -365,6 +409,11 @@ function obtenirTableauFicheFrais($user, $mois)
      }
      return $retour;
 }
+/**
+ * retourne la fiche de frais d'un visiteur son la forme d'un tableau
+ 
+ * @return un tableau associatif contenant les montants des forfaits de frais en fonction de leur id
+ */
 function obtenirTableauMontantFrais()
 {
      $requete = "select id ,montant from fraisforfait";
@@ -376,16 +425,32 @@ function obtenirTableauMontantFrais()
      }
      return $retour;
 }
-
+/**
+ * retourne les differents mois dont au moins une fiche de frais a pour état "VA"
+ 
+ * @return le resultat de la requete
+ */
 function obtenirReqMoisFrais() {
     $req = "select distinct(fichefrais.mois) as mois from  fichefrais where idEtat='VA'";
     return $req ;
 }
+/**
+ * retourne les differents visiteurs dont au moins une fiche de frais a pour état "VA"
+ 
+ * @return le resultat de la requete
+ */
 function obtenirReqFraisVisiteur()
 {   
     $reqvisiteur = "select distinct (idVisiteur) from fichefrais where idEtat='VA'";
     return $reqvisiteur;
 } 
+/**
+ * retourne une requete SQL en fonction d'un mois et de l'id d'un visiteur
+ 
+ * @param $unMois : id du visiteur
+ * @param $unIdVisiteur : numero du mois
+ * @return la requete
+ */
 function obtenirReqNbFicheFrais($unMois, $unIdVisiteur) {
     
     $unMois = filtrerChainePourBD($unMois);
@@ -401,6 +466,11 @@ function obtenirReqNbFicheFrais($unMois, $unIdVisiteur) {
     return $requete;
 }
 
+/**
+ * retourne un tableau associatif contenant les mois possedant au moins une fiche de frais avec l'état = "VA"
+ 
+ * @return un tableau
+ */
 public function obtenirMoisFrais()
 {
      $requete = "select distinct(fichefrais.mois) as mois from  fichefrais where idEtat='VA'";
@@ -414,6 +484,11 @@ public function obtenirMoisFrais()
      }
      return $retour;
 }
+/**
+ * retourne un tableau associatif contenant les visiteurs possedant au moins une fiche de frais avec l'état = "VA"
+ 
+ * @return un tableau
+ */
 public function obtenirFraisVisiteur()
 {
      $requete = "select distinct (idVisiteur) as visiteur from fichefrais where idEtat='VA'";
@@ -428,6 +503,13 @@ public function obtenirFraisVisiteur()
      return $retour;
 }
 
+/**
+ * retourne le montant total d'une fiche de frais
+ 
+ * @param $userSaisi : id de l'utilisateur
+ * @param $moisSaisi : numero du mois
+ * @return la somme
+ */
 public function obtenirMontantTotal($userSaisi, $moisSaisi)
 {   
      
@@ -440,6 +522,13 @@ public function obtenirMontantTotal($userSaisi, $moisSaisi)
      return $data['total'];
 }
 
+/**
+ * retourne un tableau associatif contenant les fiches de frais en fonction d'un visiteur et d'un mois
+ 
+ * @param $userSaisi : id de l'utilisateur
+ * @param $moisSaisi : numero du mois
+ * @return le tableau
+ */
 public function obtenirTabEltsFraisForfait($userSaisi, $moisSaisi)
 {   
     $requete = "SELECT fraisforfait.libelle, sum(quantite) as quantite
@@ -460,6 +549,13 @@ public function obtenirTabEltsFraisForfait($userSaisi, $moisSaisi)
     return $tabEltsFraisForfait;
 }
 
+/**
+ * retourne un tableau associatif contenant les fiches de frais hors forfait en fonction d'un visiteur et d'un mois
+ 
+ * @param $userSaisi : id de l'utilisateur
+ * @param $moisSaisi : numero du mois
+ * @return le tableau
+ */
 public function obtenirLgEltHorsForfait($userSaisi, $moisSaisi)
 {
     $requete = "select id, date, libelle, montant from LigneFraisHorsForfait
@@ -476,6 +572,44 @@ public function obtenirLgEltHorsForfait($userSaisi, $moisSaisi)
      }
      return $retour;
 }
+
+
+/**
+ * retourne le mot de passe crypter afin de verifier la connection
+ 
+ * @param $login : login de l'utilisateur
+ * @param $mdp : mot de passe de l'utilisateur
+ * @return le mot de passe crypter
+ */
+        public function cryptage($login,$mdp)
+        {
+            $crypter = crypt($login, $mdp);
+            return $crypter; 
+        }
+        
+            
+/**
+ * Crypte les mots de passe dans la base de donnée (à éxecuter une seul fois !)
+ */
+        public function cryptageBDD()
+        {
+             $requete = "select mdp, login from utilisateur ";
+             $resultat = PdoGsb::$monPdo->query($requete);
+             $count = $resultat->rowCount();
+             $tab = $resultat->fetchAll();
+             print_r($tab);
+             
+             for($i = 0 ; $i < $count ; $i++)
+             {
+                 $tab2 = $tab[$i];               
+                 $login = $tab2['login'];
+                 $pass =  $tab2['mdp'];  
+                 $password = crypt($login,$pass);
+                 
+                 $requete2 = "update utilisateur set mdp ='".$password."' where login = '".$login."'";
+                 PdoGsb::$monPdo->exec($requete2);
+             }   
+        }
 
 }
 ?>

@@ -7,7 +7,7 @@ $listeMois=$pdo->moisFicheEnCours();
 if($_GET['action']=="selectionnerVisiteur" && isset($_GET['action2']) && $_GET['action2']=="FicheValide")
 {
     $pdo->majEtatFicheFrais($_POST['Id'],$_POST['mois'],"VA");
-    echo"<script> alert('La fiche de frais a été validée avec succès ! ');";
+    echo"<script> alert('Les modifications ont bien été éffectuées.');";
     echo"window.location = 'index.php?uc=validerFrais&action=selectionnerVisiteur'</script>";
 }
 
@@ -92,13 +92,13 @@ if($_GET['action']=="VisiteurSelected")
 		else
 		{?>
                         <hr align="left" width="100%" color="Black" size="3">
-                        <form method="POST" onSubmit="return(confirm('Etes-vous sûr de vouloir valider cette fiche ?'));" action="index.php?uc=validerFrais&action=selectionnerVisiteur&action2=FicheValide">
+                        <form method="POST" action="index.php?uc=validerFrais&action=selectionnerVisiteur&action2=FicheValide">
                         <input TYPE='hidden' NAME='Id' VALUE='<?php echo $_POST['Id'] ?>'>
                         <input TYPE='hidden' NAME='mois' VALUE='<?php echo $_POST['mois'] ?>'>
                         <input type='Submit' value='Valider cette fiche' style='left: 37%; position: relative'>
                         </form>
                         <div class="corpsForm">
-                        <form method="POST" action="index.php?uc=validerFrais&action=VisiteurSelected&action2=FraitForfait" onsubmit="return confirm('Voulez-vous vraiment modifier les frais forfaits ?');">
+                        <form method="POST" action="index.php?uc=validerFrais&action=VisiteurSelected&action2=FraitForfait">
                         <input TYPE='hidden' NAME='Id' VALUE='<?php echo $_POST['Id'] ?>'>
                         <input TYPE='hidden' NAME='mois' VALUE='<?php echo $_POST['mois'] ?>'>
                         <fieldset>

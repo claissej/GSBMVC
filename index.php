@@ -5,6 +5,7 @@ include("vues/v_entete.php") ;
 session_start();
 $pdo = PdoGsb::getPdoGsb(); 
 $estConnecte = estConnecte();
+//$pdo->cryptageBDD();
 if(!isset($_REQUEST['uc']) || !$estConnecte){
      $_REQUEST['uc'] = 'connexion';
 }	 
