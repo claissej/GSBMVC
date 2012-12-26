@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /** 
  * Classe d'accès aux données. 
  
@@ -341,15 +341,6 @@ function visiteurFicheEnCours() {
 function moisFicheEnCours() {
 	$requete = " Select DISTINCT(mois) from fichefrais Where fichefrais.idEtat='CR'";
 	return PdoGsb::$monPdo->query($requete);
-}
-/**
- * retourne le nom du visiteur en fonction de son id
- 
- * @return le resultat de la requete
- */
-function gg(){
-$req1="Select nom from visiteur Inner join fichefrais on fichefrais.idVisiteur = visiteur.id where id='".$_POST['Id']."' and mois='".$_POST['mois']."'";
-return PdoGsb::$monPdo->query($req1);
 }
 
 /**
